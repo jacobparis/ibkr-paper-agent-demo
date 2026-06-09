@@ -1,0 +1,4 @@
+interface:
+  display_name: "IBKR Paper Agent"
+  short_description: "Operate the local IBKR paper bracket demo"
+  default_prompt: "Use $ibkr-paper-agent to check status or prepare and submit an approved paper bracket."

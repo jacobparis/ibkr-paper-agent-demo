@@ -1,0 +1,22 @@
+{
+  "name": "ibkr-sandbox-agent-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Paper-only IBKR agent demo with Vercel Sandbox validation scripts.",
+  "scripts": {
+    "test": "node --test && python3 -m unittest discover -s test -p 'test_*.py'",
+    "validate:docker": "node scripts/validate-vercel-docker.mjs",
+    "validate:ibgateway-image": "node scripts/validate-ib-gateway-image.mjs",
+    "validate:ondemand-worker": "node scripts/validate-ondemand-worker.mjs",
+    "worker:intent": "node scripts/create-paper-intent.mjs",
+    "worker:remote": "node scripts/run-ondemand-worker.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@vercel/sandbox": "^2.1.0",
+    "dotenv": "^16.6.1"
+  }
+}
