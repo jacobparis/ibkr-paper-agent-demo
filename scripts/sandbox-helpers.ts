@@ -2,7 +2,7 @@ import "dotenv/config";
 import { readFile } from "node:fs/promises";
 import { Sandbox } from "@vercel/sandbox";
 
-export async function createSandbox(options = {}) {
+export async function createSandbox(options: Record<string, unknown> = {}) {
   return Sandbox.create({
     runtime: "node24",
     timeout: 10 * 60 * 1000,
@@ -11,7 +11,11 @@ export async function createSandbox(options = {}) {
   });
 }
 
-export async function run(sandbox, command, options = {}) {
+export async function run(
+  sandbox: Sandbox,
+  command: string,
+  options: Record<string, unknown> = {},
+): Promise<{ stdout: string; stderr: string }> {
   const result = await sandbox.runCommand({
     cmd: "sh",
     args: ["-lc", command],
@@ -28,7 +32,7 @@ export async function run(sandbox, command, options = {}) {
   return { stdout, stderr };
 }
 
-export async function installDocker(sandbox) {
+export async function installDocker(sandbox: Sandbox): Promise<void> {
   const hasDocker = await run(sandbox, "command -v docker >/dev/null 2>&1")
     .then(() => true)
     .catch(() => false);
@@ -51,7 +55,11 @@ export async function installDocker(sandbox) {
   );
 }
 
-export async function uploadTextFile(sandbox, localPath, remotePath) {
+export async function uploadTextFile(
+  sandbox: Sandbox,
+  localPath: string,
+  remotePath: string,
+): Promise<void> {
   const content = await readFile(localPath);
   await sandbox.writeFiles([{ path: remotePath, content }]);
 }

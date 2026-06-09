@@ -1,13 +1,13 @@
 export const AUTH_READY_ACK = "YES_I_AM_READY_TO_COMPLETE_IBKR_AUTH_IN_MY_BROWSER";
 export const IBKR_PORTAL_LOGIN_URL = "https://ndcdyn.interactivebrokers.com/sso/Login?RL=1&locale=en_US";
 
-export function authenticationPreflight() {
+export function authenticationPreflight(): string {
   return "[auth] browser-auth readiness confirmed; starting IBKR paper Gateway";
 }
 
 export function requireAuthenticationReadiness({
   acknowledgement,
-} = {}) {
+}: { acknowledgement?: string } = {}): void {
   if (acknowledgement === AUTH_READY_ACK) return;
   throw new Error(
     [
@@ -33,7 +33,7 @@ export function requireAuthenticationReadiness({
 
 export function authenticationTimeoutError({
   cause,
-} = {}) {
+}: { cause?: Error } = {}): Error {
   return new Error(
     [
       "[user-action-required] IBKR paper Gateway did not become API-ready.",

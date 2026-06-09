@@ -5,7 +5,7 @@ import {
   authenticationPreflight,
   authenticationTimeoutError,
   requireAuthenticationReadiness,
-} from "./auth-guidance.mjs";
+} from "./auth-guidance";
 import {
   cleanupIbGateway,
   downloadAudit,
@@ -14,13 +14,13 @@ import {
   resetTwsWorkerState,
   runTwsWorker,
   startIbGateway,
-} from "./tws-worker-sandbox.mjs";
-import { renderWorkerOutput } from "./render-worker-output.mjs";
+} from "./tws-worker-sandbox";
+import { renderWorkerOutput } from "./render-worker-output";
 
 const command = process.argv[2] ?? "reconcile";
 const intentFile = process.argv[3];
 if (!["reconcile", "submit", "whatif"].includes(command)) {
-  throw new Error("Usage: npm run worker:remote -- <reconcile|whatif|submit> [intent.json]");
+  throw new Error("Usage: bun run worker:remote -- <reconcile|whatif|submit> [intent.json]");
 }
 if (command !== "reconcile" && !intentFile) {
   throw new Error(`${command} requires an intent JSON file`);
@@ -33,7 +33,7 @@ try {
     acknowledgement: process.env.IBKR_AUTH_READY,
   });
 } catch (error) {
-  console.error(error.message);
+  console.error((error as Error).message);
   process.exit(1);
 }
 console.log(authenticationPreflight());
@@ -79,7 +79,7 @@ try {
   if (audit) console.error(`[audit] wrote ${audit}`);
   const logs = await downloadGatewayLogs(sandbox).catch(() => null);
   if (logs) console.error(`[ibgateway] wrote ${logs}`);
-  console.error(error.message);
+  console.error((error as Error).message);
   process.exitCode = 1;
 } finally {
   await cleanupIbGateway(sandbox).catch(() => null);
@@ -87,17 +87,21 @@ try {
   console.log(`[sandbox] stopped and preserved ${sandbox.name}`);
 }
 
-async function runWhenGatewayReady(sandbox, args, {
+async function runWhenGatewayReady(
+  sandbox: Sandbox,
+  args: string[],
+  {
   timeoutMs = 3 * 60 * 1_000,
   retryMs = 5_000,
-} = {}) {
+  }: { timeoutMs?: number; retryMs?: number } = {},
+): Promise<{ stdout: string; stderr: string }> {
   let lastError;
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {
       return await runTwsWorker(sandbox, { args, env: brokerEnv() });
     } catch (error) {
-      lastError = error;
+      lastError = error as Error;
       await new Promise((resolve) => setTimeout(resolve, retryMs));
     }
   }
@@ -106,7 +110,7 @@ async function runWhenGatewayReady(sandbox, args, {
   });
 }
 
-function brokerEnv() {
+function brokerEnv(): Record<string, string> {
   return {
     IBKR_ALLOW_ORDER_SUBMISSION: process.env.IBKR_ALLOW_ORDER_SUBMISSION ?? "",
     IBKR_ALLOW_OUTSIDE_RTH: process.env.IBKR_ALLOW_OUTSIDE_RTH ?? "",

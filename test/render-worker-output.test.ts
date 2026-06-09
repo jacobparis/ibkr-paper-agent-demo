@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renderWorkerOutput } from "../scripts/render-worker-output.mjs";
+import { renderWorkerOutput } from "../scripts/render-worker-output";
 
 test("renders reconciliation without balance noise", () => {
   const output = renderWorkerOutput(JSON.stringify({

@@ -6,7 +6,7 @@ import {
   AUTH_READY_ACK,
   IBKR_PORTAL_LOGIN_URL,
   requireAuthenticationReadiness,
-} from "../scripts/auth-guidance.mjs";
+} from "../scripts/auth-guidance";
 
 test("authentication preflight confirms readiness", () => {
   const message = authenticationPreflight();
@@ -30,13 +30,14 @@ test("authentication timeout retains the latest readiness error", () => {
 
 test("credentialed commands require a prominent browser-auth checkpoint", () => {
   assert.throws(
-    () => requireAuthenticationReadiness({ mode: "paper" }),
-    (error) => {
-      assert.match(error.message, /USER ACTION REQUIRED: IBKR BROWSER AUTHENTICATION CHECKPOINT/);
-      assert.match(error.message, /Reply done to the coding agent/);
-      assert.match(error.message, new RegExp(escapeRegex(IBKR_PORTAL_LOGIN_URL)));
-      assert.match(error.message, /Do not paste an IBKR password or SMS code/);
-      assert.match(error.message, new RegExp(`IBKR_AUTH_READY=${AUTH_READY_ACK}`));
+    () => requireAuthenticationReadiness(),
+    (error: unknown) => {
+      const message = (error as Error).message;
+      assert.match(message, /USER ACTION REQUIRED: IBKR BROWSER AUTHENTICATION CHECKPOINT/);
+      assert.match(message, /Reply done to the coding agent/);
+      assert.match(message, new RegExp(escapeRegex(IBKR_PORTAL_LOGIN_URL)));
+      assert.match(message, /Do not paste an IBKR password or SMS code/);
+      assert.match(message, new RegExp(`IBKR_AUTH_READY=${AUTH_READY_ACK}`));
       return true;
     },
   );
@@ -46,6 +47,6 @@ test("credentialed commands require a prominent browser-auth checkpoint", () => 
   }));
 });
 
-function escapeRegex(value) {
+function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }

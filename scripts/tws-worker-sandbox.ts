@@ -1,11 +1,12 @@
 import "dotenv/config";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { installDocker, run, uploadTextFile } from "./sandbox-helpers.mjs";
+import { Sandbox } from "@vercel/sandbox";
+import { installDocker, run, uploadTextFile } from "./sandbox-helpers";
 
 const GATEWAY_IMAGE = "ghcr.io/gnzsnz/ib-gateway:stable";
 
-export async function buildTwsWorker(sandbox) {
+export async function buildTwsWorker(sandbox: Sandbox): Promise<void> {
   await run(sandbox, "mkdir -p /vercel/sandbox/tws-worker/workers /vercel/sandbox/state");
   await uploadTextFile(
     sandbox,
@@ -23,12 +24,12 @@ export async function buildTwsWorker(sandbox) {
   );
 }
 
-export async function prepareTwsWorkerSandbox(sandbox) {
+export async function prepareTwsWorkerSandbox(sandbox: Sandbox): Promise<void> {
   await installDocker(sandbox);
   await buildTwsWorker(sandbox);
 }
 
-export async function resetTwsWorkerState(sandbox) {
+export async function resetTwsWorkerState(sandbox: Sandbox): Promise<void> {
   await run(
     sandbox,
     [
@@ -41,20 +42,23 @@ export async function resetTwsWorkerState(sandbox) {
   );
 }
 
-export async function startIbGateway(sandbox, {
+export async function startIbGateway(sandbox: Sandbox, {
   username = process.env.TWS_USERID,
   password = process.env.TWS_PASSWORD,
   readOnlyApi = false,
-} = {}) {
+}: {
+  username?: string;
+  password?: string;
+  readOnlyApi?: boolean;
+} = {}): Promise<{ hostPort: number }> {
   if (!username || !password) {
     throw new Error("Set TWS_USERID and TWS_PASSWORD for the IB Gateway login");
   }
   const hostPort = 4002;
   const containerPort = 4004;
   await run(sandbox, "mkdir -p /vercel/sandbox/state");
-  await sandbox.fs.writeFile("/vercel/sandbox/state/tws-password", password, {
-    mode: 0o600,
-  });
+  await sandbox.fs.writeFile("/vercel/sandbox/state/tws-password", password);
+  await run(sandbox, "chmod 600 /vercel/sandbox/state/tws-password");
   const hasGatewayImage = await run(
     sandbox,
     `sudo docker image inspect ${GATEWAY_IMAGE} >/dev/null 2>&1`,
@@ -81,7 +85,7 @@ export async function startIbGateway(sandbox, {
   return { hostPort };
 }
 
-export async function cleanupIbGateway(sandbox) {
+export async function cleanupIbGateway(sandbox: Sandbox): Promise<void> {
   await run(
     sandbox,
     [
@@ -91,10 +95,13 @@ export async function cleanupIbGateway(sandbox) {
   );
 }
 
-export async function runTwsWorker(sandbox, {
+export async function runTwsWorker(sandbox: Sandbox, {
   args,
   env = {},
-} = {}) {
+}: {
+  args: string[];
+  env?: Record<string, string>;
+}): Promise<{ stdout: string; stderr: string }> {
   const envArgs = Object.entries(env)
     .map(([key, value]) => `--env ${key}=${shellQuote(value)}`)
     .join(" ");
@@ -110,7 +117,10 @@ export async function runTwsWorker(sandbox, {
   );
 }
 
-export async function downloadAudit(sandbox, outputDir = "work") {
+export async function downloadAudit(
+  sandbox: Sandbox,
+  outputDir = "work",
+): Promise<string | null> {
   const remote = "/vercel/sandbox/state/audit.jsonl";
   const exists = await sandbox.fs
     .stat(remote)
@@ -124,7 +134,7 @@ export async function downloadAudit(sandbox, outputDir = "work") {
   return path;
 }
 
-export async function inspectGateway(sandbox) {
+export async function inspectGateway(sandbox: Sandbox): Promise<string> {
   const { stdout } = await run(
     sandbox,
     "sudo docker logs --tail 120 ib-gateway 2>&1",
@@ -132,7 +142,10 @@ export async function inspectGateway(sandbox) {
   return stdout;
 }
 
-export async function downloadGatewayLogs(sandbox, outputDir = "work") {
+export async function downloadGatewayLogs(
+  sandbox: Sandbox,
+  outputDir = "work",
+): Promise<string> {
   const content = await inspectGateway(sandbox);
   await mkdir(outputDir, { recursive: true });
   const path = join(outputDir, `ibgateway-${Date.now()}.log`);
@@ -140,6 +153,6 @@ export async function downloadGatewayLogs(sandbox, outputDir = "work") {
   return path;
 }
 
-export function shellQuote(value) {
+export function shellQuote(value: string | number): string {
   return `'${String(value).replaceAll("'", "'\"'\"'")}'`;
 }

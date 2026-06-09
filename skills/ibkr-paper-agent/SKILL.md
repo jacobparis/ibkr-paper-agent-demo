@@ -27,7 +27,7 @@ runbook.
 
    ```bash
    IBKR_AUTH_READY=YES_I_AM_READY_TO_COMPLETE_IBKR_AUTH_IN_MY_BROWSER \
-     npm run worker:remote -- reconcile
+     bun run worker:remote -- reconcile
    ```
 
 2. For a new trade, use explicit user-approved prices with:
@@ -37,7 +37,7 @@ runbook.
    IBKR_TAKE_PROFIT_LIMIT=<take-profit> \
    IBKR_STOP_LOSS_PRICE=<stop-loss> \
    IBKR_ALLOW_DURABLE_ENTRY=YES_I_UNDERSTAND_THIS_PAPER_ENTRY_REMAINS_ACTIVE_UNTIL_FILLED_OR_CANCELLED \
-     npm run worker:intent
+     bun run worker:intent
    ```
 
 3. Run `whatif` before asking for approval:
@@ -45,7 +45,7 @@ runbook.
    ```bash
    IBKR_AUTH_READY=YES_I_AM_READY_TO_COMPLETE_IBKR_AUTH_IN_MY_BROWSER \
    IBKR_ALLOW_DURABLE_ENTRY=YES_I_UNDERSTAND_THIS_PAPER_ENTRY_REMAINS_ACTIVE_UNTIL_FILLED_OR_CANCELLED \
-     npm run worker:remote -- whatif work/paper-bracket-intent.json
+     bun run worker:remote -- whatif work/paper-bracket-intent.json
    ```
 
 4. Submit only after the user approves the exact bracket:
@@ -54,7 +54,7 @@ runbook.
    IBKR_AUTH_READY=YES_I_AM_READY_TO_COMPLETE_IBKR_AUTH_IN_MY_BROWSER \
    IBKR_ALLOW_DURABLE_ENTRY=YES_I_UNDERSTAND_THIS_PAPER_ENTRY_REMAINS_ACTIVE_UNTIL_FILLED_OR_CANCELLED \
    IBKR_ALLOW_ORDER_SUBMISSION=YES_I_UNDERSTAND_THIS_SUBMITS_A_PAPER_BRACKET_ORDER \
-     npm run worker:remote -- submit work/paper-bracket-intent.json
+     bun run worker:remote -- submit work/paper-bracket-intent.json
    ```
 
 5. Reconcile again after submit.

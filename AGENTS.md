@@ -17,11 +17,11 @@ ignored local `.env`. Never ask for an IBKR password or SMS code in chat.
 ## Bootstrap
 
 ```bash
-npm install
+bun install
 vercel link
 vercel env pull .env.local
-npm test
-npm run validate:ondemand-worker
+bun test
+bun run validate:ondemand-worker
 cp .env.example .env
 ```
 
@@ -36,13 +36,13 @@ and `IBKR_ENTRY_TTL_SECONDS`.
 Generate and locally validate the intent:
 
 ```bash
-npm run worker:intent
+bun run worker:intent
 ```
 
 Trigger the authentication checkpoint before creating a Sandbox:
 
 ```bash
-npm run worker:remote -- reconcile
+bun run worker:remote -- reconcile
 ```
 
 Relay the emitted `USER ACTION REQUIRED` block verbatim and wait for the user
@@ -53,9 +53,9 @@ After `done`, reconcile and run broker validation:
 
 ```bash
 IBKR_AUTH_READY=YES_I_AM_READY_TO_COMPLETE_IBKR_AUTH_IN_MY_BROWSER \
-  npm run worker:remote -- reconcile
+  bun run worker:remote -- reconcile
 IBKR_AUTH_READY=YES_I_AM_READY_TO_COMPLETE_IBKR_AUTH_IN_MY_BROWSER \
-  npm run worker:remote -- whatif work/paper-bracket-intent.json
+  bun run worker:remote -- whatif work/paper-bracket-intent.json
 ```
 
 Show the user: side, quantity, symbol, entry limit, take-profit limit,
@@ -65,7 +65,7 @@ Submit only after approval of that exact bracket:
 ```bash
 IBKR_AUTH_READY=YES_I_AM_READY_TO_COMPLETE_IBKR_AUTH_IN_MY_BROWSER \
 IBKR_ALLOW_ORDER_SUBMISSION=YES_I_UNDERSTAND_THIS_SUBMITS_A_PAPER_BRACKET_ORDER \
-  npm run worker:remote -- submit work/paper-bracket-intent.json
+  bun run worker:remote -- submit work/paper-bracket-intent.json
 ```
 
 Run the prefixed reconciliation command again from a fresh Gateway session and

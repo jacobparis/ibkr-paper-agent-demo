@@ -3,7 +3,7 @@ import { execFile } from "node:child_process";
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { renderWorkerOutput } from "./render-worker-output.mjs";
+import { renderWorkerOutput } from "./render-worker-output";
 
 const workerPath = fileURLToPath(new URL("../workers/tws_worker.py", import.meta.url));
 await main().catch((error) => {
@@ -11,7 +11,7 @@ await main().catch((error) => {
   process.exitCode = 1;
 });
 
-async function main() {
+async function main(): Promise<void> {
   const entryTif = (process.env.IBKR_ENTRY_TIF ?? "GTC").toUpperCase();
   if (!["GTC", "GTD"].includes(entryTif)) {
     throw new Error("IBKR_ENTRY_TIF must be GTC or GTD");
@@ -55,16 +55,16 @@ async function main() {
   console.log(renderWorkerOutput(stdout));
 }
 
-function required(name) {
+function required(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`${name} is required`);
   return value;
 }
 
-function errorMessage(error) {
+function errorMessage(error: unknown): string {
   try {
-    return JSON.parse(error.stderr).error;
+    return JSON.parse((error as { stderr: string }).stderr).error;
   } catch {
-    return error.message;
+    return (error as Error).message;
   }
 }

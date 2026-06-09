@@ -39,11 +39,12 @@ for authentication exceptions.
 ## Setup
 
 ```bash
-npm install
+curl -fsSL https://bun.sh/install | bash
+bun install
 vercel link
 vercel env pull .env.local
 cp .env.example .env
-npm test
+bun test
 ```
 
 Fill `.env` locally. Do not paste credentials into chat.
@@ -53,10 +54,10 @@ default. Set `IBKR_SANDBOX_NAME` locally to use another name.
 ## Maintainer Checks
 
 ```bash
-npm test
-npm run validate:docker
-npm run validate:ibgateway-image
-npm run validate:ondemand-worker
+bun test
+bun run validate:docker
+bun run validate:ibgateway-image
+bun run validate:ondemand-worker
 ```
 
 The design rationale and validation evidence are in

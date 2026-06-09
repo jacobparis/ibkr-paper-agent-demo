@@ -1,4 +1,4 @@
-import { createSandbox, installDocker, run } from "./sandbox-helpers.mjs";
+import { createSandbox, installDocker, run } from "./sandbox-helpers";
 
 const sandbox = await createSandbox();
 console.log(`[sandbox] created ${sandbox.name}`);

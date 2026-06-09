@@ -1,8 +1,8 @@
-import { createSandbox } from "./sandbox-helpers.mjs";
+import { createSandbox } from "./sandbox-helpers";
 import {
   prepareTwsWorkerSandbox,
   runTwsWorker,
-} from "./tws-worker-sandbox.mjs";
+} from "./tws-worker-sandbox";
 
 const sandbox = await createSandbox({ timeout: 10 * 60 * 1000 });
 console.log(`[sandbox] created ${sandbox.name}`);

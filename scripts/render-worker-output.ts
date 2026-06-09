@@ -1,5 +1,11 @@
-export function renderWorkerOutput(stdout) {
-  const payload = JSON.parse(stdout);
+type WorkerOutput = {
+  ok: boolean;
+  error?: string;
+  output: Record<string, any>;
+};
+
+export function renderWorkerOutput(stdout: string): string {
+  const payload = JSON.parse(stdout) as WorkerOutput;
   if (!payload.ok) throw new Error(payload.error);
   const output = payload.output;
 
@@ -35,7 +41,11 @@ export function renderWorkerOutput(stdout) {
   return `[worker] event=${output.event}`;
 }
 
-function renderState(label, state, { includeOrders = true } = {}) {
+function renderState(
+  label: string,
+  state: Record<string, any>,
+  { includeOrders = true }: { includeOrders?: boolean } = {},
+): string[] {
   const positions = state.positions ?? [];
   const openOrders = flattenOrders(state.openOrders ?? []);
   const executions = state.executions ?? [];
@@ -45,11 +55,14 @@ function renderState(label, state, { includeOrders = true } = {}) {
   ];
 }
 
-function flattenOrders(orders) {
+function flattenOrders(orders: Record<string, any>[]): Record<string, any>[] {
   return orders.flatMap((order) => order.orders ?? [order]);
 }
 
-function renderOrders(orders, intent = {}) {
+function renderOrders(
+  orders: Record<string, any>[],
+  intent: Record<string, any> = {},
+): string[] {
   return orders.map((order) => {
     const symbol = order.symbol ?? intent.symbol;
     const quantity = order.quantity ?? intent.quantity;
