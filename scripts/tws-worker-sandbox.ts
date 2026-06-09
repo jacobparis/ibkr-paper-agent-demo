@@ -2,7 +2,7 @@ import "dotenv/config";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Sandbox } from "@vercel/sandbox";
-import { installDocker, run, uploadTextFile } from "./sandbox-helpers";
+import { installDocker, run, runArgs, uploadTextFile } from "./sandbox-helpers";
 
 const GATEWAY_IMAGE = "ghcr.io/gnzsnz/ib-gateway:stable";
 
@@ -68,19 +68,29 @@ export async function startIbGateway(sandbox: Sandbox, {
   if (!hasGatewayImage) {
     await run(sandbox, `sudo docker pull ${GATEWAY_IMAGE}`);
   }
-  await run(
+  await runArgs(
     sandbox,
+    "docker",
     [
-      "sudo docker run --detach --name ib-gateway",
-      "  --env TWS_USERID",
-      "  --env TWS_PASSWORD_FILE=/run/secrets/tws-password",
-      "  --env TRADING_MODE=paper",
-      `  --env READ_ONLY_API=${readOnlyApi ? "yes" : "no"}`,
-      "  --volume /vercel/sandbox/state/tws-password:/run/secrets/tws-password:ro",
-      `  --publish 127.0.0.1:${hostPort}:${containerPort}`,
-      `  ${GATEWAY_IMAGE}`,
-    ].join(" \\\n"),
-    { env: { TWS_USERID: username } },
+      "run",
+      "--detach",
+      "--name",
+      "ib-gateway",
+      "--env",
+      "TWS_USERID",
+      "--env",
+      "TWS_PASSWORD_FILE=/run/secrets/tws-password",
+      "--env",
+      "TRADING_MODE=paper",
+      "--env",
+      `READ_ONLY_API=${readOnlyApi ? "yes" : "no"}`,
+      "--volume",
+      "/vercel/sandbox/state/tws-password:/run/secrets/tws-password:ro",
+      "--publish",
+      `127.0.0.1:${hostPort}:${containerPort}`,
+      GATEWAY_IMAGE,
+    ],
+    { env: { TWS_USERID: username }, sudo: true },
   );
   return { hostPort };
 }
@@ -102,18 +112,25 @@ export async function runTwsWorker(sandbox: Sandbox, {
   args: string[];
   env?: Record<string, string>;
 }): Promise<{ stdout: string; stderr: string }> {
-  const envArgs = Object.entries(env)
-    .map(([key, value]) => `--env ${key}=${shellQuote(value)}`)
-    .join(" ");
-  return run(
+  const envArgs = Object.entries(env).flatMap(([key, value]) => [
+    "--env",
+    `${key}=${value}`,
+  ]);
+  return runArgs(
     sandbox,
+    "docker",
     [
-      "sudo docker run --rm --network host",
-      "  --volume /vercel/sandbox/state:/state",
-      `  ${envArgs}`,
-      "  tws-worker",
-      `  ${args.map(shellQuote).join(" ")}`,
-    ].join(" \\\n"),
+      "run",
+      "--rm",
+      "--network",
+      "host",
+      "--volume",
+      "/vercel/sandbox/state:/state",
+      ...envArgs,
+      "tws-worker",
+      ...args,
+    ],
+    { sudo: true },
   );
 }
 
@@ -151,8 +168,4 @@ export async function downloadGatewayLogs(
   const path = join(outputDir, `ibgateway-${Date.now()}.log`);
   await writeFile(path, content);
   return path;
-}
-
-export function shellQuote(value: string | number): string {
-  return `'${String(value).replaceAll("'", "'\"'\"'")}'`;
 }

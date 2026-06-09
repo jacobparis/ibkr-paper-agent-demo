@@ -32,6 +32,28 @@ export async function run(
   return { stdout, stderr };
 }
 
+export async function runArgs(
+  sandbox: Sandbox,
+  command: string,
+  args: string[],
+  options: Record<string, unknown> = {},
+): Promise<{ stdout: string; stderr: string }> {
+  const result = await sandbox.runCommand({
+    cmd: command,
+    args,
+    ...options,
+  });
+  const stdout = await result.stdout();
+  const stderr = await result.stderr();
+
+  if (result.exitCode !== 0) {
+    throw new Error(
+      `Command failed (${result.exitCode}): ${command} ${args.join(" ")}\n${stdout}\n${stderr}`,
+    );
+  }
+  return { stdout, stderr };
+}
+
 export async function installDocker(sandbox: Sandbox): Promise<void> {
   const hasDocker = await run(sandbox, "command -v docker >/dev/null 2>&1")
     .then(() => true)
